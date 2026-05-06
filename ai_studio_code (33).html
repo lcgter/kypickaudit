@@ -11,15 +11,12 @@
     <style>
         /* 状态颜色定义 */
         .row-complete { background-color: #d1fae5; } /* 正常完成：绿色 */
-        .row-partial { background-color: #fef3c7; }  /* 多扫/异常：黄色 */
-        .row-missing { background-color: #f3f4f6; }  /* 未扫：灰色 */
-        .row-extra { background-color: #fee2e2; }    /* 漏扫/缺失：红色 */
+        .row-partial { background-color: #fef3c7; }  /* 部分漏扫/多扫/异常：黄色 */
+        .row-missing { background-color: #f3f4f6; }  /* 初始/未操作：灰色 */
+        .row-extra { background-color: #fee2e2; }    /* 全漏扫(Qty=0)或完全不在单内：红色 */
         
-        /* 加载动画 */
         .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #09f; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* 隐藏滚动条但保留功能 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -37,7 +34,7 @@
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto p-6 space-y-8">
+    <div class="max-w-7xl mx-auto p-4 space-y-6">
         
         <!-- 第一部分：文件上传区 -->
         <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
@@ -64,7 +61,6 @@
         <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
             <h2 class="text-lg font-semibold mb-4" id="ui-audit-title">2. Audit Workspace</h2>
             
-            <!-- 身份确认 -->
             <div id="audit-login" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700" id="ui-auditor-label">Auditor Name</label>
@@ -92,13 +88,11 @@
                 </div>
             </div>
 
-            <!-- 扫描操作区 -->
             <div id="scan-workspace" class="hidden space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-blue-50 p-4 rounded border border-blue-200">
                         <label class="block font-bold text-blue-800" id="ui-scan-tote-label">Scan Picking Tote</label>
                         <input type="text" id="tote-input" class="mt-1 block w-full border-2 border-blue-400 rounded-md p-3 text-lg focus:ring-blue-500">
-                        <!-- 暂存下一箱按钮 -->
                         <button id="btn-next-tote" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 shadow flex items-center justify-center gap-2">
                             <span id="ui-btn-next-tote">Audit Next Tote</span> 
                             <span id="staged-count" class="bg-blue-800 px-2 py-0.5 rounded-full text-xs">0</span>
@@ -110,7 +104,6 @@
                     </div>
                 </div>
 
-                <!-- 当前稽查明细表 -->
                 <div class="overflow-x-auto border rounded-lg">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-100">
@@ -124,23 +117,20 @@
                             </tr>
                         </thead>
                         <tbody id="audit-table-body" class="divide-y divide-gray-200 bg-white">
-                            <!-- 动态行内容 -->
                         </tbody>
                     </table>
                 </div>
 
-                <!-- 结束并上传按钮 -->
                 <div class="flex justify-end pt-4">
-                    <button id="btn-end-audit" class="bg-red-600 text-white px-12 py-3 rounded-xl font-bold hover:bg-red-700 shadow-xl transform transition hover:scale-105" id="ui-btn-end">Finish Audit & Upload All</button>
+                    <button id="btn-end-audit" class="bg-red-600 text-white px-12 py-3 rounded-xl font-bold hover:bg-red-700 shadow-xl transform transition hover:scale-105">Finish Audit & Upload All</button>
                 </div>
             </div>
         </section>
 
-        <!-- 第三部分：稽查报表与高级统计面板 -->
+        <!-- 第三部分：报表与统计 -->
         <section class="bg-white p-6 rounded-lg shadow-md border-t-4 border-purple-500">
             <h2 class="text-lg font-semibold mb-4" id="ui-report-title">3. Session Audit Report</h2>
             
-            <!-- 筛选面板 -->
             <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-600 uppercase mb-1" id="ui-filter-bldg">Building</label>
@@ -159,18 +149,14 @@
                     <input type="text" id="filter-auditor" class="w-full border rounded p-2" placeholder="Name">
                 </div>
                 <div class="flex items-end">
-                    <button id="btn-generate-report" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 font-bold transition flex items-center justify-center gap-2">
-                        <span id="ui-btn-generate">Generate Report</span>
-                    </button>
+                    <button id="btn-generate-report" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 font-bold transition">Generate Report</button>
                 </div>
             </div>
 
-            <!-- 可视化数据看板容器 -->
-            <div id="summary-dashboard" class="hidden flex flex-col gap-8 mb-8">
-                <!-- 统计卡片与 Picker 看板将由 JS 注入 -->
+            <!-- 可视化看板容器 -->
+            <div id="summary-dashboard" class="hidden flex flex-col gap-4 mb-6">
             </div>
 
-            <!-- 导出按钮与明细表 -->
             <div class="flex justify-end mb-2">
                 <button id="btn-export" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 text-sm font-bold">
                     <span id="ui-btn-export-text">Export to Excel</span>
@@ -178,31 +164,27 @@
             </div>
             
             <div class="relative overflow-hidden border rounded-lg">
-                <!-- 报表查询状态指示器 -->
                 <div id="report-loader" class="hidden absolute inset-0 bg-white bg-opacity-80 z-10 flex flex-col items-center justify-center">
                     <div class="spinner mb-2"></div>
-                    <p class="text-sm font-bold text-blue-800 tracking-widest">Fetching Audit Data...</p>
+                    <p class="text-xs font-bold text-blue-800">Fetching Data...</p>
                 </div>
-
                 <div class="overflow-x-auto max-h-[500px]">
-                    <table class="min-w-full text-sm text-left divide-y divide-gray-200" id="report-table">
+                    <table class="min-w-full text-xs text-left divide-y divide-gray-200" id="report-table">
                         <thead class="bg-gray-100 sticky top-0">
                             <tr>
-                                <th class="px-4 py-3 border">Tote ID</th>
-                                <th class="px-4 py-3 border">SKC</th>
-                                <th class="px-4 py-3 border">SKU</th>
-                                <th class="px-4 py-3 border">Picker</th>
-                                <th class="px-4 py-3 border">Pick Qty</th>
-                                <th class="px-4 py-3 border">Scan Qty</th>
-                                <th class="px-4 py-3 border text-red-600">Missing Qty</th>
-                                <th class="px-4 py-3 border text-orange-600">Extra Qty</th>
-                                <th class="px-4 py-3 border">Shift</th>
-                                <th class="px-4 py-3 border">Bldg</th>
-                                <th class="px-4 py-3 border">Audit Time</th>
+                                <th class="px-3 py-2 border">Tote ID</th>
+                                <th class="px-3 py-2 border">SKC</th>
+                                <th class="px-3 py-2 border">SKU</th>
+                                <th class="px-3 py-2 border">Picker</th>
+                                <th class="px-3 py-2 border">Pick Qty</th>
+                                <th class="px-3 py-2 border">Scan Qty</th>
+                                <th class="px-3 py-2 border text-red-600">Missing</th>
+                                <th class="px-3 py-2 border text-orange-600">Extra</th>
+                                <th class="px-3 py-2 border">Shift</th>
+                                <th class="px-3 py-2 border text-[10px]">Time</th>
                             </tr>
                         </thead>
                         <tbody id="report-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- 数据行内容 -->
                         </tbody>
                     </table>
                 </div>
@@ -216,7 +198,6 @@
         const SUPABASE_KEY = "sb_publishable_40rCwoGI6jW2TfBjB7OoTA_E9X5nGex";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- 多语言翻译配置 ---
         const i18n = {
             en: {
                 title: "KY's Picking Quality Audit Tool",
@@ -246,29 +227,29 @@
                 missingRate: "Missing Rate"
             },
             es: {
-                title: "Herramienta de Auditoría de Calidad KY",
-                uploadTitle: "1. Carga de Detalles de Picking",
-                uploadBtn: "Seleccionar Archivo XLSX",
-                uploadHint: "Admite archivos grandes (40k-60k filas)",
-                auditTitle: "2. Espacio de Trabajo de Auditoría",
-                auditor: "Nombre del Auditor",
+                title: "Herramienta de Auditoría KY",
+                uploadTitle: "1. Carga de Picking",
+                uploadBtn: "Seleccionar XLSX",
+                uploadHint: "Archivos grandes (40k-60k)",
+                auditTitle: "2. Auditoría",
+                auditor: "Auditor",
                 building: "Edificio",
                 shift: "Turno",
-                confirm: "Confirmar Identidad",
-                scanTote: "Escanear Tote de Picking",
-                btnNext: "Auditar Siguiente Tote",
-                scanProduct: "Escanear Código de Barras",
-                btnEnd: "Finalizar y Subir Todo",
-                reportTitle: "3. Informe de Auditoría de la Sesión",
+                confirm: "Confirmar",
+                scanTote: "Escanear Tote",
+                btnNext: "Siguiente Tote",
+                scanProduct: "Escanear Producto",
+                btnEnd: "Finalizar y Subir",
+                reportTitle: "3. Reporte de Auditoría",
                 btnExport: "Exportar a Excel",
-                btnGenerate: "Generar Informe",
+                btnGenerate: "Generar Reporte",
                 thQty: "Cant. Picking",
                 thPicker: "Picker",
-                thScan: "Cant. Escaneada",
-                successUpload: "¡Carga exitosa!",
+                thScan: "Cant. Scan",
+                successUpload: "Carga exitosa!",
                 errTote: "Tote no encontrado.",
-                totalTotes: "Total Totes",
-                totalItems: "Total Escaneado",
+                totalTotes: "Totes Totales",
+                totalItems: "Total Scan",
                 extraRate: "Tasa de Extras",
                 missingRate: "Tasa de Faltantes"
             },
@@ -279,7 +260,7 @@
                 uploadHint: "支持大文件 (4万-6万行数据)",
                 auditTitle: "2. 稽查工作区",
                 auditor: "稽查员姓名",
-                building: "楼栋/建筑",
+                building: "楼栋",
                 shift: "班次",
                 confirm: "确认身份",
                 scanTote: "扫描拣货周转箱 (Tote)",
@@ -301,17 +282,14 @@
             }
         };
 
-        // --- 全局状态 ---
         let currentLang = 'en';
-        let currentToteItems = []; // 当前 UI 正在显示的明细
-        let stagedAuditItems = []; // 暂存区：存放已完成稽查但未上传的多个 Tote 明细
-        let lastReportData = [];   // 最近一次查询出的报表数据
+        let currentToteItems = [];
+        let stagedAuditItems = [];
+        let lastReportData = [];
         let currentAuditor = "";
         let currentShift = "";
         let currentBuilding = "";
         let currentToteId = "";
-
-        // --- 核心逻辑函数 ---
 
         function updateUI() {
             const t = i18n[currentLang];
@@ -327,10 +305,9 @@
             document.getElementById('ui-scan-tote-label').innerText = t.scanTote;
             document.getElementById('ui-btn-next-tote').innerText = t.btnNext;
             document.getElementById('ui-scan-product-label').innerText = t.scanProduct;
-            document.getElementById('btn-end-audit').innerText = t.btnEnd;
             document.getElementById('ui-report-title').innerText = t.reportTitle;
             document.getElementById('ui-btn-export-text').innerText = t.btnExport;
-            document.getElementById('ui-btn-generate').innerText = t.btnGenerate;
+            document.getElementById('btn-generate-report').innerText = t.btnGenerate;
             document.getElementById('ui-th-qty').innerText = t.thQty;
             document.getElementById('ui-th-picker').innerText = t.thPicker;
             document.getElementById('ui-th-scan').innerText = t.thScan;
@@ -343,15 +320,11 @@
 
         function getFormattedDate() {
             const now = new Date();
-            return now.getFullYear() + '-' + 
-                   String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                   String(now.getDate()).padStart(2, '0') + ' ' + 
-                   String(now.getHours()).padStart(2, '0') + ':' + 
-                   String(now.getMinutes()).padStart(2, '0') + ':' + 
-                   String(now.getSeconds()).padStart(2, '0');
+            return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + 
+                   String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
         }
 
-        // 1. 文件上传逻辑
+        // --- 1. Excel 上传逻辑 (表名 pick_details 使用原始映射) ---
         document.getElementById('excel-upload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -359,23 +332,69 @@
             const progressText = document.getElementById('progress-text');
             const progressBar = document.getElementById('progress-bar');
             statusDiv.classList.remove('hidden');
+            
             const reader = new FileReader();
             reader.onload = async (evt) => {
                 try {
                     const data = evt.target.result;
                     const workbook = XLSX.read(data, { type: 'binary' });
                     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                    if (rows.length === 0) throw new Error("File is empty.");
+
+                    const uniqueToteIds = Array.from(new Set(
+                        rows.map(r => r['Picking tote'] ? String(r['Picking tote']).trim() : null)
+                            .filter(Boolean)
+                    ));
+                    
+                    if (uniqueToteIds.length === 0) throw new Error("No valid Picking totes found.");
+
+                    progressText.innerText = `Cleaning existing records (Batch Deleting)...`;
+                    const delBatchSize = 400; 
+                    for (let i = 0; i < uniqueToteIds.length; i += delBatchSize) {
+                        const chunk = uniqueToteIds.slice(i, i + delBatchSize);
+                        const { error: delError } = await supabaseClient
+                            .from('pick_details')
+                            .delete()
+                            .in('Picking tote', chunk);
+                        
+                        if (delError) throw delError;
+                        
+                        const delPercent = Math.round(((i + chunk.length) / uniqueToteIds.length) * 100);
+                        progressBar.style.width = delPercent + "%";
+                    }
+
+                    progressText.innerText = `Preparing ${rows.length} rows for insertion...`;
+
                     const batchSize = 1000;
                     for (let i = 0; i < rows.length; i += batchSize) {
-                        const batch = rows.slice(i, i + batchSize).map(row => ({
-                            "Warehouse": row['Warehouse'], "Park": row['Park'], "Sub-warehouses": row['Sub-warehouses'],
-                            "Task No.": row['Task No.'], "Wave ID": row['Wave ID'], "Picking tote": String(row['Picking tote']),
-                            "SKC": row['SKC'], "size": row['size'], "Picking quantity": parseInt(row['Picking quantity']) || 0,
-                            "1st sorting quantity": parseInt(row['1st sorting quantity']) || 0, "2nd sorting quantity": parseInt(row['2nd sorting quantity']) || 0,
-                            "Picker": row['Picker'], "Picking Time": row['Picking Time'], "Storage attribute name": row['Storage attribute name'], "SKU": row['SKU']
-                        }));
-                        const { error } = await supabaseClient.from('pick details').insert(batch);
-                        if (error) throw error;
+                        const batch = rows.slice(i, i + batchSize).map(row => {
+                            let pickTimeRaw = row['Picking Time'];
+                            let pickTimeClean = null;
+                            if (pickTimeRaw && pickTimeRaw !== "N/A" && pickTimeRaw !== "") {
+                                const d = new Date(pickTimeRaw);
+                                pickTimeClean = isNaN(d.getTime()) ? null : d.toISOString();
+                            }
+                            return {
+                                "Warehouse": String(row['Warehouse'] || "N/A"), 
+                                "Park": String(row['Park'] || "N/A"), 
+                                "Sub-warehouses": String(row['Sub-warehouses'] || "N/A"),
+                                "Task No.": String(row['Task No.'] || "N/A"), 
+                                "Wave ID": String(row['Wave ID'] || "N/A"), 
+                                "Picking tote": String(row['Picking tote'] || "N/A").trim(),
+                                "SKC": String(row['SKC'] || "N/A"), 
+                                "size": String(row['size'] || "N/A"), 
+                                "Picking quantity": Number(row['Picking quantity']) || 0,
+                                "1st sorting quantity": Number(row['1st sorting quantity']) || 0, 
+                                "2nd sorting quantity": Number(row['2nd sorting quantity']) || 0,
+                                "Picker": String(row['Picker'] || "N/A"), 
+                                "Picking Time": pickTimeClean, 
+                                "Storage attribute name": String(row['Storage attribute name'] || "N/A"), 
+                                "SKU": String(row['SKU'] || "N/A")
+                            };
+                        });
+                        const { error: insError } = await supabaseClient.from('pick_details').insert(batch);
+                        if (insError) throw insError;
                         const percent = Math.round(((i + batch.length) / rows.length) * 100);
                         progressBar.style.width = percent + "%";
                         progressText.innerText = `Uploading: ${percent}%`;
@@ -387,24 +406,24 @@
             reader.readAsBinaryString(file);
         });
 
-        // 2. 身份确认逻辑
+        // 2. 身份确认
         document.getElementById('btn-start-audit').addEventListener('click', () => {
             currentAuditor = document.getElementById('auditor-name').value;
             currentBuilding = document.getElementById('auditor-building').value;
             currentShift = document.getElementById('auditor-shift').value;
-            if (!currentAuditor) return alert("Please enter Auditor Name");
+            if (!currentAuditor) return alert("Enter Auditor Name");
             document.getElementById('audit-login').classList.add('opacity-50', 'pointer-events-none');
             document.getElementById('scan-workspace').classList.remove('hidden');
         });
 
-        // 3. 扫描 Tote 逻辑
+        // 3. 扫描 Tote
         document.getElementById('tote-input').addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
                 const toteId = e.target.value.trim();
                 if (!toteId) return;
                 currentToteId = toteId;
                 try {
-                    const { data, error } = await supabaseClient.from('pick details').select('*').eq('Picking tote', toteId);
+                    const { data, error } = await supabaseClient.from('pick_details').select('*').eq('Picking tote', toteId);
                     if (error) throw error;
                     if (!data || data.length === 0) { alert(i18n[currentLang].errTote); return; }
                     currentToteItems = data.map(item => ({
@@ -418,12 +437,12 @@
             }
         });
 
-        // 4. 扫描商品逻辑 (包含 Picker 继承与 Extra 处理)
+        // 4. 扫描商品
         document.getElementById('product-input').addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
                 const rawBarcode = e.target.value.trim();
                 if (!rawBarcode) return;
-                const barcd10 = rawBarcode.slice(-10); // 取后 10 位
+                const barcd10 = rawBarcode.slice(-10);
                 e.target.value = ""; 
                 try {
                     const { data: prodData } = await supabaseClient.from('product_data').select('skc, sku').eq('goods_bar_cd', barcd10).single();
@@ -434,7 +453,7 @@
                         if (matchIndex > -1) {
                             currentToteItems[matchIndex].scan_qty += 1;
                             const matchedItem = currentToteItems.splice(matchIndex, 1)[0];
-                            currentToteItems.unshift(matchedItem); // 匹配成功的移动到第一行
+                            currentToteItems.unshift(matchedItem);
                         } else {
                             addExtraRow(prodData.skc, prodData.sku, barcd10);
                         }
@@ -445,7 +464,6 @@
         });
 
         function addExtraRow(skc, sku, barcode) {
-            // 继承当前箱子的 Picker
             const inheritedPicker = currentToteItems.find(i => !i.is_extra)?.picker || "N/A";
             currentToteItems.unshift({
                 picking_tote: currentToteId, skc: skc, sku: sku,
@@ -458,23 +476,22 @@
             tbody.innerHTML = "";
             currentToteItems.forEach(item => {
                 const row = document.createElement('tr');
-                if (item.is_extra) row.className = "row-partial"; // 黄色
-                else if (item.scan_qty === 0) row.className = "row-missing"; // 灰色
-                else if (item.scan_qty < item.picking_quantity) row.className = "row-extra"; // 红色
-                else row.className = "row-complete"; // 绿色
-                
-                row.innerHTML = `<td class="px-4 py-2 border">${item.picking_tote}</td><td class="px-4 py-2 border">${item.skc}</td><td class="px-4 py-2 border">${item.sku}</td><td class="px-4 py-2 border font-bold">${item.picking_quantity}</td><td class="px-4 py-2 border text-gray-600">${item.picker}</td><td class="px-4 py-2 border font-bold text-blue-700">${item.scan_qty}</td>`;
+                const p = item.picking_quantity;
+                const s = item.scan_qty;
+                if (item.is_extra) row.className = "row-partial";
+                else if (s === 0) row.className = "row-extra";
+                else if (s < p) row.className = "row-partial";
+                else if (s === p) row.className = "row-complete";
+                else row.className = "row-partial";
+                row.innerHTML = `<td class="px-4 py-2 border">${item.picking_tote}</td><td class="px-4 py-2 border">${item.skc}</td><td class="px-4 py-2 border">${item.sku}</td><td class="px-4 py-2 border font-bold">${p}</td><td class="px-4 py-2 border text-gray-600">${item.picker}</td><td class="px-4 py-2 border font-bold text-blue-700">${s}</td>`;
                 tbody.appendChild(row);
             });
         }
 
-        // 5. 稽查下一箱 (暂存 stagedAuditItems)
         document.getElementById('btn-next-tote').addEventListener('click', () => {
             if (currentToteItems.length === 0) return;
             stagedAuditItems = [...stagedAuditItems, ...currentToteItems];
             document.getElementById('staged-count').innerText = new Set(stagedAuditItems.map(i => i.picking_tote)).size;
-            
-            // 重置当前工作区
             currentToteItems = [];
             currentToteId = "";
             document.getElementById('audit-table-body').innerHTML = "";
@@ -484,17 +501,18 @@
             document.getElementById('tote-input').focus();
         });
 
-        // 6. 结束稽查并批量上传
+        // --- 6. 稽查数据上传 (精准修复：pick_audit 表字段名为 "picking tote") ---
         document.getElementById('btn-end-audit').addEventListener('click', async () => {
             const finalBatch = [...stagedAuditItems, ...currentToteItems];
             if (finalBatch.length === 0) return;
 
             const timeNow = getFormattedDate();
+            const toteIds = Array.from(new Set(finalBatch.map(item => item.picking_tote)));
             const dataArray = finalBatch.map(item => {
                 const pQty = item.picking_quantity || 0;
                 const sQty = item.scan_qty || 0;
                 return {
-                    "picking tote": item.picking_tote,
+                    "picking tote": item.picking_tote, // 精准修复：全小写
                     "skc": item.skc,
                     "sku": item.sku,
                     "Picking quantity": pQty,
@@ -510,40 +528,46 @@
             });
 
             try {
-                const { error } = await supabaseClient.from('pick_audit').insert(dataArray);
-                if (error) throw error;
-                alert("Audit completed! All data uploaded.");
-                
-                // 清空状态
+                const delBatchSize = 400;
+                for (let i = 0; i < toteIds.length; i += delBatchSize) {
+                    const chunk = toteIds.slice(i, i + delBatchSize);
+                    // 精准修复：使用全小写字段名并加双引号包裹
+                    const { error: delError } = await supabaseClient
+                        .from('pick_audit')
+                        .delete()
+                        .in('"picking tote"', chunk); 
+                    if (delError) throw delError;
+                }
+
+                const { error: insError } = await supabaseClient.from('pick_audit').insert(dataArray);
+                if (insError) throw insError;
+
+                alert("Audit saved and updated!");
                 stagedAuditItems = [];
                 currentToteItems = [];
                 document.getElementById('staged-count').innerText = "0";
                 document.getElementById('audit-table-body').innerHTML = "";
                 document.getElementById('tote-input').value = "";
                 document.getElementById('tote-input').focus();
-            } catch (err) { alert("Save Failed: " + err.message); }
+            } catch (err) { alert("Operation Failed: " + err.message); }
         });
 
-        // 7. 生成报表与统计看板
+        // 7. 报表查询
         document.getElementById('btn-generate-report').addEventListener('click', async () => {
             const bldg = document.getElementById('filter-building').value;
             const shift = document.getElementById('filter-shift').value;
             const date = document.getElementById('filter-date').value;
             const auditor = document.getElementById('filter-auditor').value;
-
             const loader = document.getElementById('report-loader');
             loader.classList.remove('hidden');
-
             try {
                 let query = supabaseClient.from('pick_audit').select('*');
                 if (bldg) query = query.eq('building', bldg);
                 if (shift) query = query.eq('audit shift', shift);
                 if (date) query = query.gte('audit_time', `${date} 00:00:00`).lte('audit_time', `${date} 23:59:59`);
                 if (auditor) query = query.ilike('auditor', `%${auditor}%`);
-
                 const { data, error } = await query.order('audit_time', { ascending: false });
                 if (error) throw error;
-
                 lastReportData = data;
                 renderReportTable(data);
                 renderSummaryDashboard(data);
@@ -556,138 +580,77 @@
             tbody.innerHTML = "";
             data.forEach(row => {
                 const tr = document.createElement('tr');
-                if (row.missing_quantity > 0) tr.className = "row-extra"; // 缺失标红
-                else if (row.extra_quantity > 0) tr.className = "row-partial"; // 多扫标黄
-
-                tr.innerHTML = `
-                    <td class="px-4 py-2 border">${row["picking tote"]}</td>
-                    <td class="px-4 py-2 border">${row["skc"]}</td>
-                    <td class="px-4 py-2 border">${row["sku"]}</td>
-                    <td class="px-4 py-2 border text-gray-500">${row["picker"]}</td>
-                    <td class="px-4 py-2 border font-bold">${row["Picking quantity"]}</td>
-                    <td class="px-4 py-2 border font-bold text-blue-600">${row["scan quantity"]}</td>
-                    <td class="px-4 py-2 border font-bold text-red-600">${row["missing_quantity"]}</td>
-                    <td class="px-4 py-2 border font-bold text-orange-600">${row["extra_quantity"]}</td>
-                    <td class="px-4 py-2 border">${row["audit shift"]}</td>
-                    <td class="px-4 py-2 border">${row["building"]}</td>
-                    <td class="px-4 py-2 border text-[10px]">${row["audit_time"]}</td>
-                `;
+                if (row.missing_quantity > 0 && row.scan_quantity === 0) tr.className = "row-extra";
+                else if (row.missing_quantity > 0 || row.extra_quantity > 0) tr.className = "row-partial";
+                // 报表读取也对齐全小写 "picking tote"
+                tr.innerHTML = `<td class="px-3 py-1 border">${row["picking tote"]}</td><td class="px-3 py-1 border">${row["skc"]}</td><td class="px-3 py-1 border">${row["sku"]}</td><td class="px-3 py-1 border text-gray-500">${row["picker"]}</td><td class="px-3 py-1 border font-bold">${row["Picking quantity"]}</td><td class="px-3 py-1 border font-bold text-blue-600">${row["scan quantity"]}</td><td class="px-3 py-1 border font-bold text-red-600">${row.missing_quantity}</td><td class="px-3 py-1 border font-bold text-orange-600">${row.extra_quantity}</td><td class="px-3 py-1 border text-[10px]">${row["audit shift"]}</td><td class="px-3 py-1 border text-[10px] tracking-tighter">${row.building}</td><td class="px-3 py-1 border text-[10px]">${row["audit_time"]}</td>`;
                 tbody.appendChild(tr);
             });
         }
 
-        // --- 核心看板渲染逻辑 (修复断流并补全) ---
+        // 8. 可视化看板渲染 (对齐全小写字段名)
         function renderSummaryDashboard(data) {
             const dashboard = document.getElementById('summary-dashboard');
             if (!dashboard) return;
-            
-            dashboard.innerHTML = ""; // 清空
+            dashboard.innerHTML = "";
             dashboard.classList.remove('hidden');
 
-            // --- 1. 数据聚合 ---
             const overall = { totalPick: 0, totalScan: 0, totalExtra: 0, totalMissing: 0, totes: new Set() };
             const pickerMap = {};
-
             data.forEach(row => {
                 const pQty = row["Picking quantity"] || 0;
                 const sQty = row["scan quantity"] || 0;
                 const eQty = row["extra_quantity"] || 0;
                 const mQty = row["missing_quantity"] || 0;
-                const pickerName = row["picker"] || "Unknown";
-
-                overall.totalPick += pQty;
-                overall.totalScan += sQty;
-                overall.totalExtra += eQty;
-                overall.totalMissing += mQty;
-                overall.totes.add(row["picking tote"]);
-
-                if (!pickerMap[pickerName]) {
-                    pickerMap[pickerName] = { pick: 0, scan: 0, extra: 0, missing: 0, toteCount: new Set() };
-                }
-                pickerMap[pickerName].pick += pQty;
-                pickerMap[pickerName].scan += sQty;
-                pickerMap[pickerName].extra += eQty;
-                pickerMap[pickerName].missing += mQty;
-                pickerMap[pickerName].toteCount.add(row["picking tote"]);
+                const pickerName = row.picker || "Unknown";
+                overall.totalPick += pQty; overall.totalScan += sQty; overall.totalExtra += eQty; overall.totalMissing += mQty; 
+                overall.totes.add(row["picking tote"]); // 对齐全小写
+                if (!pickerMap[pickerName]) pickerMap[pickerName] = { pick: 0, scan: 0, extra: 0, missing: 0, toteCount: new Set() };
+                pickerMap[pickerName].pick += pQty; pickerMap[pickerName].scan += sQty; pickerMap[pickerName].extra += eQty; pickerMap[pickerName].missing += mQty; 
+                pickerMap[pickerName].toteCount.add(row["picking tote"]); // 对齐全小写
             });
 
-            const overallMRate = overall.totalPick ? ((overall.totalMissing / overall.totalPick) * 100).toFixed(2) : "0.00";
-            const overallERate = overall.totalPick ? ((overall.totalExtra / overall.totalPick) * 100).toFixed(2) : "0.00";
-
-            // --- 2. 整体汇总 UI ---
             const summaryHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 shadow-sm rounded-lg">
-                        <p class="text-xs font-bold text-blue-600 uppercase tracking-wider">${i18n[currentLang].totalTotes}</p>
-                        <p class="text-3xl font-black text-gray-800">${overall.totes.size}</p>
-                    </div>
-                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 shadow-sm rounded-lg">
-                        <p class="text-xs font-bold text-indigo-600 uppercase tracking-wider">${i18n[currentLang].totalItems}</p>
-                        <p class="text-3xl font-black text-gray-800">${overall.totalScan}</p>
-                    </div>
-                    <div class="bg-red-50 border-l-4 border-red-500 p-4 shadow-sm rounded-lg">
-                        <p class="text-xs font-bold text-red-600 uppercase tracking-wider">${i18n[currentLang].missingRate}</p>
-                        <p class="text-3xl font-black text-red-700">${overallMRate}%</p>
-                    </div>
-                    <div class="bg-orange-50 border-l-4 border-orange-500 p-4 shadow-sm rounded-lg">
-                        <p class="text-xs font-bold text-orange-600 uppercase tracking-wider">${i18n[currentLang].extraRate}</p>
-                        <p class="text-3xl font-black text-orange-700">${overallERate}%</p>
-                    </div>
-                </div>
-            `;
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="bg-blue-50 p-2 shadow-sm rounded border-l-4 border-blue-500"><p class="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">Totes</p><p class="text-lg font-black tracking-tight">${overall.totes.size}</p></div>
+                    <div class="bg-indigo-50 p-2 shadow-sm rounded border-l-4 border-indigo-500"><p class="text-[10px] font-bold text-indigo-600 uppercase tracking-tighter">Scan Qty</p><p class="text-lg font-black tracking-tight">${overall.totalScan}</p></div>
+                    <div class="bg-red-50 p-2 shadow-sm rounded border-l-4 border-red-500"><p class="text-[10px] font-bold text-red-600 uppercase text-xs tracking-tighter">Missing %</p><p class="text-lg font-black tracking-tight">${overall.totalPick ? ((overall.totalMissing / overall.totalPick) * 100).toFixed(2) : '0.00'}%</p></div>
+                    <div class="bg-orange-50 p-2 shadow-sm rounded border-l-4 border-orange-500"><p class="text-[10px] font-bold text-orange-600 uppercase text-xs tracking-tighter">Extra %</p><p class="text-lg font-black tracking-tight">${overall.totalPick ? ((overall.totalExtra / overall.totalPick) * 100).toFixed(2) : '0.00'}%</p></div>
+                </div>`;
 
-            // --- 3. Picker 维度卡片 UI ---
             let pickerCardsHTML = `
-                <div class="mt-4">
-                    <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                        <span class="w-2 h-6 bg-purple-600 rounded-full"></span>
-                        Picker Performance Analytics
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            `;
+                <div class="mt-2">
+                    <h3 class="text-xs font-bold text-gray-700 mb-2 border-l-4 border-purple-600 pl-2">Picker Performance Analysis</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">`;
 
             Object.keys(pickerMap).forEach(name => {
                 const stats = pickerMap[name];
                 const mRate = stats.pick ? ((stats.missing / stats.pick) * 100).toFixed(2) : (stats.missing > 0 ? "100.00" : "0.00");
-                const eRate = stats.pick ? ((stats.extra / stats.pick) * 100).toFixed(2) : "N/A";
+                const eRate = stats.pick ? ((stats.extra / stats.pick) * 100).toFixed(2) : "0.00";
                 
-                const mRiskClass = parseFloat(mRate) > 0 ? "text-red-600 font-bold" : "text-gray-600";
-                const eRiskClass = (eRate !== 'N/A' && parseFloat(eRate) > 0) ? "text-orange-600" : "text-gray-600";
-
                 pickerCardsHTML += `
-                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-5">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                            </div>
-                            <div><p class="text-sm text-gray-500 font-medium">Picker</p><p class="text-lg font-bold text-gray-800 leading-none">${name}</p></div>
+                    <div class="bg-white border border-gray-200 rounded p-1.5 shadow-sm relative overflow-hidden transition hover:shadow-md">
+                        <div class="flex items-center gap-1 mb-1 border-b pb-1">
+                            <div class="w-5 h-5 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 shrink-0 text-[9px] font-bold uppercase">${name.charAt(0)}</div>
+                            <p class="text-[10px] font-bold text-gray-800 truncate" title="${name}">${name}</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 mb-4 border-t border-b border-gray-50 py-3 text-center">
-                            <div class="border-r border-gray-50"><p class="text-xs text-gray-400 uppercase">Missing</p><p class="text-xl font-black text-red-500">${stats.missing}</p></div>
-                            <div><p class="text-xs text-gray-400 uppercase">Extra</p><p class="text-xl font-black text-orange-500">${stats.extra}</p></div>
+                        <div class="grid grid-cols-2 text-[9px] mb-1">
+                            <div><span class="text-gray-400 font-mono">M:</span> <span class="font-bold text-red-500">${stats.missing}</span></div>
+                            <div><span class="text-gray-400 font-mono">E:</span> <span class="font-bold text-orange-500">${stats.extra}</span></div>
                         </div>
-                        <div class="space-y-3">
-                            <div>
-                                <div class="flex justify-between text-xs mb-1"><span class="font-semibold text-gray-600">Missing Rate</span><span class="${mRiskClass}">${mRate}%</span></div>
-                                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden"><div class="bg-red-500 h-full" style="width: ${Math.min(parseFloat(mRate), 100)}%"></div></div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs mb-1"><span class="font-semibold text-gray-600">Extra Rate</span><span class="${eRiskClass}">${eRate}%</span></div>
-                                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden"><div class="bg-orange-400 h-full" style="width: ${Math.min(parseFloat(eRate === 'N/A' ? 0 : eRate), 100)}%"></div></div>
-                            </div>
+                        <div class="space-y-1">
+                            <div><div class="flex justify-between text-[8px]"><span class="text-gray-500">Miss%</span><span class="${parseFloat(mRate) > 0 ? 'text-red-600 font-bold' : ''}">${mRate}%</span></div><div class="w-full bg-gray-100 h-1 rounded-full overflow-hidden"><div class="bg-red-500 h-full" style="width: ${Math.min(parseFloat(mRate), 100)}%"></div></div></div>
+                            <div><div class="flex justify-between text-[8px]"><span class="text-gray-500">Extra%</span><span class="${parseFloat(eRate) > 0 ? 'text-orange-600 font-bold' : ''}">${eRate}%</span></div><div class="w-full bg-gray-100 h-1 rounded-full overflow-hidden"><div class="bg-orange-400 h-full" style="width: ${Math.min(parseFloat(eRate), 100)}%"></div></div></div>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-gray-50 flex justify-between items-center text-[10px] text-gray-400 font-medium uppercase">
-                            <span>${stats.toteCount.size} Totes</span><span>Picked: ${stats.pick}</span>
+                        <div class="mt-1 pt-1 border-t flex justify-between text-[8px] text-gray-400">
+                            <span>${stats.toteCount.size} Totes</span><span>Qty:${stats.pick}</span>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-
             pickerCardsHTML += `</div></div>`;
             dashboard.innerHTML = summaryHTML + pickerCardsHTML;
         }
 
-        // 8. 导出逻辑
         document.getElementById('btn-export').addEventListener('click', () => {
             if (lastReportData.length === 0) return;
             const ws = XLSX.utils.json_to_sheet(lastReportData);
@@ -696,7 +659,6 @@
             XLSX.writeFile(wb, `KY_Audit_Report_${new Date().getTime()}.xlsx`);
         });
 
-        // 初始化界面
         updateUI();
     </script>
 </body>
